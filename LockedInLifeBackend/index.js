@@ -1,13 +1,15 @@
 const express = require('express');
 const { Pool } = require('pg');
 require('dotenv').config();
+const cors = require('cors');
 
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware to parse JSON request bodies
+// Middleware
 app.use(express.json());
+app.use(cors());
 
 // PostgreSQL Pool (for database connection)
 const pool = new Pool({
@@ -32,7 +34,7 @@ app.get('/', async (req, res) => {
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -83,17 +85,41 @@ app.get('/users', async (req, res) => {
 
 // POST: Add a new user
 app.post('/users', async (req, res) => {
-  const { username, email, password_hash } = req.body;
+  const { username, email, password } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *',
-      [username, email, password_hash]
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
+      [username, email, password]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
   }
+});
+
+// POST: Login (check if username and password match)
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        // Query the database for a user with the given username and password
+        const result = await pool.query(
+            'SELECT * FROM users WHERE username = $1 AND password = $2',
+            [username, password] // Check for matching username and password
+        );
+
+        if (result.rows.length > 0) {
+            // User found, send success response
+            res.status(200).json({ message: 'Login successful' });
+        } else {
+            // No user found with those credentials
+            res.status(401).json({ message: 'Invalid credentials' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // POST: Add a new challenge

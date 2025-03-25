@@ -6,15 +6,34 @@ const LoginPage = () => {
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = () => {
-        // Get users from localStorage (later, replace with backend API call)
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const user = users.find(user => user.username === username && user.password === password);
+    const handleLogin = async () => {
+        if (!username || !password) {
+            alert("Please fill in both fields.");
+            return;
+        }
 
-        if (user) {
-            navigate("/home"); // Directs user to home page when successfully logged in
-        } else {
-            alert("Invalid credentials");
+        try {
+            // Send a POST request to check credentials against the backend
+            const response = await fetch("http://localhost:3000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // If credentials are correct, navigate to home page
+                navigate("/home");
+            } else {
+                // If credentials are incorrect
+                alert("Invalid credentials");
+            }
+        } catch (error) {
+            console.error("Error during login:", error);
+            alert("An error occurred while logging in.");
         }
     };
 
@@ -23,10 +42,20 @@ const LoginPage = () => {
             <h1>Locked-In Life</h1>
             <h2>Welcome back</h2>
             <div>
-                <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
             </div>
             <div>
-                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
             </div>
             <div>
                 <button onClick={handleLogin}>Login</button>
