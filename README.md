@@ -45,3 +45,15 @@ npm run build
 ```sh
 npm run preview
 ```
+
+### Run the Backend
+
+[First install PostgreSQL](https://www.postgresql.org)
+You will need our database URL in a .env file before running the backend.
+
+In a seperate terminal:
+```sh
+cd LockedInLifeBackend
+npm install
+node index.js
+```
