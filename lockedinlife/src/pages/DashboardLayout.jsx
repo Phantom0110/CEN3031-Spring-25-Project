@@ -18,7 +18,6 @@ export default function DashboardLayout() {
 
         <NavLink to="/home">Home</NavLink>
         <NavLink to="/collections">View Collections</NavLink>
-        <NavLink to="/store">Store</NavLink>
         <NavLink to="/battlepass">Battlepass</NavLink>
 
         <button onClick={handleLogout}>Logout</button>
