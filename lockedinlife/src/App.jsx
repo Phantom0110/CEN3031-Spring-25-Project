@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import HomePage from "./pages/HomePage";
-import CollectionsPage from './pages/CollectionsPage';
 import BattlepassPage from './pages/BattlepassPage';
 import DashboardLayout from './pages/DashboardLayout';
 import './styles/app.css'
@@ -16,7 +15,6 @@ function App() {
 
         <Route element={<DashboardLayout />}>
           <Route path="/home" element={<HomePage />} />
-          <Route path="/collections" element={<CollectionsPage />} />
           <Route path="/battlepass" element={<BattlepassPage />} />
         </Route>
       </Routes>

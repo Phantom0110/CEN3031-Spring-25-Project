@@ -1,14 +1,127 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import '../styles/BattlepassPage.css'; // Import the CSS file
 
-const BattlepassPage = () => {
-    const navigate = useNavigate();
+const milestones = [
+  { points: 20, reward: "Unlock new badge!" },
+  { points: 40, reward: "Change background color!" },
+  { points: 60, reward: "Unlock new theme!" },
+  { points: 80, reward: "Special avatar item!" },
+  { points: 100, reward: "Exclusive profile banner!" }
+];
 
-    return (
-        <div>
-            <h1>Battlepass</h1>
-        </div>
-    );
+const BattlepassPage = ({ onRewardUnlock }) => {
+  const [userPoints, setUserPoints] = useState(45); // For testing, change to dynamic later
+  const [activatedRewards, setActivatedRewards] = useState(() => {
+    const storedState = localStorage.getItem('activatedRewards');
+    return storedState ? JSON.parse(storedState) : {};
+  });
+
+  // Save activated rewards to localStorage whenever the state changes
+  useEffect(() => {
+    localStorage.setItem('activatedRewards', JSON.stringify(activatedRewards));
+  }, [activatedRewards]);
+
+  const handleSwitchToggle = (points) => {
+    setActivatedRewards((prev) => {
+      const updatedRewards = {
+        ...prev,
+        [points]: !prev[points], // Toggle the switch on/off
+      };
+
+      // Apply reward actions (example: change background color)
+      if (updatedRewards[points]) {
+        if (points === 40) {
+          document.body.style.backgroundColor = '#782a23'; // Change background color
+        }
+      } else {
+        if (points === 40) {
+          document.body.style.backgroundColor = ''; // Reset the background
+        }
+      }
+
+      return updatedRewards;
+    });
+
+    // Notify parent (DashboardLayout) about the reward activation
+    if (!activatedRewards[points] && points === 60) {
+      onRewardUnlock(true); // Unlock the image reward (example)
+    } else if (activatedRewards[points] && points === 60) {
+      onRewardUnlock(false); // Deactivate the image reward
+    }
+  };
+
+  const progressPercent = Math.min((userPoints / 100) * 100, 100);
+
+  return (
+    <div className="battlepass-container">
+      <h1>Battlepass</h1>
+
+      {/* Progress Bar */}
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{
+            width: `${progressPercent}%`,
+          }}
+        />
+
+        {/* Milestone Points (numbers) on the Bar */}
+        {milestones.map((milestone, idx) => {
+          const left = `${(milestone.points / 100) * 100}%`;
+          const isUnlocked = userPoints >= milestone.points;
+
+          return (
+            <div
+              key={idx}
+              className="milestone-label"
+              style={{
+                left,
+                color: isUnlocked ? '#28753d' : '#888',
+                fontWeight: isUnlocked ? 'bold' : 'normal',
+              }}
+            >
+              {milestone.points}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Rewards Row (below the progress bar) */}
+      <div className="reward-row">
+        {milestones.map((milestone, idx) => {
+          const isUnlocked = userPoints >= milestone.points;
+          const isActive = activatedRewards[milestone.points];
+
+          return (
+            <div key={idx} className="reward-item">
+              <div
+                className="reward-text"
+                style={{
+                  color: isUnlocked ? '#4caf50' : '#888',
+                }}
+              >
+                {milestone.reward}
+              </div>
+
+              {isUnlocked && (
+                <label className="switch-container">
+                  <span className="switch-label">{isActive ? 'On' : 'Off'}</span>
+                  <input
+                    className="switch-input"
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={() => handleSwitchToggle(milestone.points)}
+                  />
+                </label>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <p>{userPoints} / 100 points</p>
+    </div>
+  );
 };
 
 export default BattlepassPage;

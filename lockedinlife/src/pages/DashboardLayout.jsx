@@ -17,10 +17,11 @@ export default function DashboardLayout() {
         <h2>Locked-In Life</h2>
 
         <NavLink to="/home">Home</NavLink>
-        <NavLink to="/collections">View Collections</NavLink>
         <NavLink to="/battlepass">Battlepass</NavLink>
 
         <button onClick={handleLogout}>Logout</button>
+
+        <img src="../assets/react.svg"></img>
       </div>
 
       <div className="content">
