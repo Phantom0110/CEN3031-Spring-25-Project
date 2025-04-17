@@ -51,6 +51,33 @@ app.get('/', async (req, res) => {
         challenge_id INT REFERENCES challenges(id) ON DELETE CASCADE,
         completed BOOLEAN DEFAULT FALSE
       );
+
+      CREATE TABLE IF NOT EXISTS battlepass_levels (
+        id               SERIAL PRIMARY KEY,
+        level_number     INT    NOT NULL UNIQUE,        -- e.g. 1, 2, 3…
+        threshold_points INT    NOT NULL,               -- points required to unlock
+        reward_name      VARCHAR(255) NOT NULL,
+        reward_details   TEXT,
+        created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+   
+      CREATE TABLE IF NOT EXISTS user_battlepass_levels (
+        id               SERIAL PRIMARY KEY,
+        user_id          INT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        level_id         INT    NOT NULL REFERENCES battlepass_levels(id) ON DELETE CASCADE,
+        unlocked_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, level_id)
+      );
+
+      INSERT INTO battlepass_levels (level_number, threshold_points, reward_name, reward_details)
+      VALUES
+        (1,   10,  'Background Color',  'Change background to red'),
+        (2,   25,  'Mascot Badge', 'Own a mascot badge');
+      
+      ALTER TABLE user_challenges
+        ADD COLUMN completed_at TIMESTAMP;
+
+
     `);
     res.json(result);
   } catch (errors) {
@@ -67,8 +94,8 @@ app.get('/challenges', async (req, res) => {
     const result = await pool.query('SELECT * FROM challenges');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    console.error(err.stack);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -155,17 +182,103 @@ app.post('/assign-challenge', async (req, res) => {
 // POST: Mark challenge as completed by user
 app.post('/complete-challenge', async (req, res) => {
   const { user_id, challenge_id } = req.body;
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
-      'UPDATE user_challenges SET completed = true, completed_at = NOW() WHERE user_id = $1 AND challenge_id = $2 RETURNING *',
+    await client.query('BEGIN');
+
+    // 1) mark as completed
+    const upd = await client.query(
+      `UPDATE user_challenges
+          SET completed = TRUE
+        WHERE user_id = $1
+          AND challenge_id = $2
+       RETURNING id`,
       [user_id, challenge_id]
     );
-    res.status(200).json(result.rows[0]);
+    if (upd.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'No such assigned challenge, or already done.' });
+    }
+
+    // 2) fetch how much XP that challenge is worth
+    const xpRes = await client.query(
+      `SELECT experience_points
+         FROM challenges
+        WHERE id = $1`,
+      [challenge_id]
+    );
+    const earnedPoints = xpRes.rows[0].experience_points;
+
+    // 3) bump the user's total
+    const userRes = await client.query(
+      `UPDATE users
+          SET points = points + $1
+        WHERE id = $2
+       RETURNING points AS new_balance`,
+      [earnedPoints, user_id]
+    );
+    const newBalance = userRes.rows[0].new_balance;
+
+    // 4) unlock any newly reachable battlepass levels
+    await client.query(
+      `INSERT INTO user_battlepass_levels (user_id, level_id)
+        SELECT $1, bp.id
+          FROM battlepass_levels bp
+         WHERE bp.threshold_points <= $2
+           AND bp.id NOT IN (
+                 SELECT level_id
+                   FROM user_battlepass_levels
+                  WHERE user_id = $1
+               )`,
+      [user_id, newBalance]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Challenge completed!',
+      earned: earnedPoints,
+      balance: newBalance
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    await client.query('ROLLBACK');
+    console.error(err.stack);
+    res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 });
+
+// right after you configure `pool` but before app.listen(...)
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS battlepass_levels (
+        id               SERIAL PRIMARY KEY,
+        level_number     INT    NOT NULL UNIQUE,
+        threshold_points INT    NOT NULL,
+        reward_name      VARCHAR(255) NOT NULL,
+        reward_details   TEXT,
+        created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS user_battlepass_levels (
+        id               SERIAL PRIMARY KEY,
+        user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        level_id         INT NOT NULL REFERENCES battlepass_levels(id) ON DELETE CASCADE,
+        unlocked_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, level_id)
+      );
+      ALTER TABLE user_challenges
+        ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;
+    `);
+    console.log('✅ Schema ensured on startup');
+  } catch (e) {
+    console.error('Schema sync error:', e.stack);
+    process.exit(1);
+  }
+})();
+
 
 // Start the server
 app.listen(port, () => {
