@@ -35,7 +35,7 @@ app.get('/', async (req, res) => {
         username VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        points INT DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS challenges (
@@ -94,8 +94,8 @@ app.get('/challenges', async (req, res) => {
     const result = await pool.query('SELECT * FROM challenges');
     res.json(result.rows);
   } catch (err) {
-    console.error(err.stack);
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).send('Server Error');
   }
 });
 
@@ -109,6 +109,61 @@ app.get('/users', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+app.get('/user/:id/points', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`SELECT points FROM users WHERE id = $1`, [id]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+// GET: All challenges assigned to a specific user
+app.get('/user-challenges/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT 
+        uc.*, 
+        c.name AS challenge_name, 
+        c.description, 
+        c.experience_points 
+      FROM user_challenges uc
+      JOIN challenges c ON uc.challenge_id = c.id
+      WHERE uc.user_id = $1
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// GET: Completed challenges for a user
+app.get('/user-completed/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT 
+        c.name, 
+        c.experience_points
+      FROM user_challenges uc
+      JOIN challenges c ON uc.challenge_id = c.id
+      WHERE uc.user_id = $1 AND uc.completed = true
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
 
 // POST: Add a new user
 app.post('/users', async (req, res) => {
@@ -278,7 +333,6 @@ app.post('/complete-challenge', async (req, res) => {
     process.exit(1);
   }
 })();
-
 
 // Start the server
 app.listen(port, () => {
