@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import '../styles/BattlepassPage.css'; // Import the CSS file
 
 const milestones = [
-  { points: 20, reward: "Unlock new badge!" },
-  { points: 40, reward: "Change background color!" },
-  { points: 60, reward: "Unlock new theme!" },
+  { points: 20, reward: "New sidebar image!" },
+  { points: 40, reward: "Change background!" },
+  { points: 60, reward: "Unlock mascot!" },
   { points: 80, reward: "Special avatar item!" },
   { points: 100, reward: "Exclusive profile banner!" }
 ];
@@ -16,37 +17,35 @@ const BattlepassPage = ({ onRewardUnlock }) => {
     return storedState ? JSON.parse(storedState) : {};
   });
 
+  const { setSidebarImage } = useOutletContext(); // Get the function from DashboardLayout
+
   // Save activated rewards to localStorage whenever the state changes
   useEffect(() => {
     localStorage.setItem('activatedRewards', JSON.stringify(activatedRewards));
   }, [activatedRewards]);
 
   const handleSwitchToggle = (points) => {
-    setActivatedRewards((prev) => {
-      const updatedRewards = {
-        ...prev,
-        [points]: !prev[points], // Toggle the switch on/off
-      };
-
-      // Apply reward actions (example: change background color)
-      if (updatedRewards[points]) {
-        if (points === 40) {
-          document.body.style.backgroundColor = '#782a23'; // Change background color
-        }
-      } else {
-        if (points === 40) {
-          document.body.style.backgroundColor = ''; // Reset the background
-        }
+    const updatedRewards = {
+      ...activatedRewards,
+      [points]: !activatedRewards[points],
+    };
+    setActivatedRewards(updatedRewards);
+  
+    // Apply reward actions (example: change background color)
+    if (updatedRewards[points]) {
+      if (points === 20) {
+        setSidebarImage('src/assets/capy.jpg'); // Change sidebar image
+      }  
+      if (points === 40) {
+        document.body.style.backgroundImage = 'linear-gradient(rgb(60, 71, 162),rgb(186, 183, 248))';
       }
-
-      return updatedRewards;
-    });
-
-    // Notify parent (DashboardLayout) about the reward activation
-    if (!activatedRewards[points] && points === 60) {
-      onRewardUnlock(true); // Unlock the image reward (example)
-    } else if (activatedRewards[points] && points === 60) {
-      onRewardUnlock(false); // Deactivate the image reward
+    } else {
+      if (points === 20) {
+        setSidebarImage('src/assets/react.svg');
+      }
+      if (points === 40) {
+        document.body.style.backgroundImage = '';
+      }
     }
   };
 
@@ -97,7 +96,7 @@ const BattlepassPage = ({ onRewardUnlock }) => {
               <div
                 className="reward-text"
                 style={{
-                  color: isUnlocked ? '#4caf50' : '#888',
+                  color: isUnlocked ? '#84d186' : '#FFFFFF',
                 }}
               >
                 {milestone.reward}

@@ -75,5 +75,5 @@ background: #4caf50;
 }
 
 .switch-input:not(:checked) {
-background: #ccc;
+background: #646464;
 }

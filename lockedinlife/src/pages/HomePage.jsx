@@ -28,7 +28,7 @@ const HomePage = () => {
         <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
           
             {/* To-Do Tasks Box */}
-            <div style={{ flex: 1, border: '1px solid #ccc', padding: '1rem', borderRadius: '8px' }}>
+            <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)'}}>
                 <h2>To-Do Tasks</h2>
                 {tasks.length === 0 ? <p>No tasks yet!</p> : (
                 <ul>
@@ -70,7 +70,7 @@ const HomePage = () => {
         </div>
     
         {/* Completed Tasks Box */}
-        <div style={{ flex: 1, border: '1px solid #ccc', padding: '1rem', borderRadius: '8px' }}>
+        <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)' }}>
             <h2>Recently Completed</h2>
             {completedTasks.length === 0 ? (
                 <p>No completed tasks yet.</p>
