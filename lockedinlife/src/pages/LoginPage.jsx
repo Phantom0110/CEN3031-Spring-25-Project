@@ -26,6 +26,7 @@ const LoginPage = () => {
 
             if (response.ok) {
                 // If credentials are correct, navigate to home page
+                localStorage.setItem('userId', data.userId);
                 navigate("/home");
             } else {
                 // If credentials are incorrect

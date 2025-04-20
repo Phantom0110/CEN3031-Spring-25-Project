@@ -127,27 +127,53 @@ app.post('/users', async (req, res) => {
 
 // POST: Login (check if username and password match)
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        // Query the database for a user with the given username and password
-        const result = await pool.query(
-            'SELECT * FROM users WHERE username = $1 AND password = $2',
-            [username, password] // Check for matching username and password
-        );
-
-        if (result.rows.length > 0) {
-            // User found, send success response
-            res.status(200).json({ message: 'Login successful' });
-        } else {
-            // No user found with those credentials
-            res.status(401).json({ message: 'Invalid credentials' });
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+  const { username, password } = req.body;
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username FROM users WHERE username = $1 AND password = $2',
+      [username, password]
+    );
+    if (rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
+    const user = rows[0];
+    // send back the user ID
+    res.json({
+      message: 'Login successful',
+      userId: user.id,
+      username: user.username
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
+
+// GET /users/:id/challenges  →  all challenges (tasks) for user #id
+app.get('/users/:id/challenges', async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         uc.challenge_id   AS id,
+         c.name,
+         c.description,
+         c.experience_points,
+         uc.completed,
+         uc.completed_at
+       FROM user_challenges uc
+       JOIN challenges c    ON uc.challenge_id = c.id
+       WHERE uc.user_id = $1
+       ORDER BY uc.completed, uc.completed_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err.stack);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // POST: Add a new challenge
 app.post('/challenges', async (req, res) => {
