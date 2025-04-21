@@ -13,6 +13,55 @@ const HomePage = () => {
 
     const userId = localStorage.getItem("userId"); // Get the user ID from localStorage
 
+    useEffect(() => {
+        const fetchUserTasks = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/user/${userId}/challenges`);
+                const data = await response.json();
+
+                const xpMap = {
+                    10: 'Easy',
+                    20: 'Medium',
+                    30: 'Hard',
+                };
+
+                const parseDueDate = (desc) => {
+                    const match = desc.match(/Due (\d{4}-\d{2}-\d{2})/);
+                    return match ? match[1] : '';
+                };
+
+                const active = [];
+                const completed = [];
+
+                data.forEach(challenge => {
+                    const task = {
+                        id: challenge.challenge_id,
+                        name: challenge.name,
+                        difficulty: xpMap[challenge.experience_points] || 'Easy',
+                        dueDate: parseDueDate(challenge.description),
+                    };
+
+                    if (challenge.completed) {
+                        completed.push(task);
+                    } else {
+                        active.push(task);
+                    }
+                });
+
+                setTasks(active);
+                setCompletedTasks(completed);
+
+            } catch (error) {
+                console.error('Failed to load user tasks:', error);
+            }
+        };
+
+        if (userId) {
+            fetchUserTasks();
+        }
+    }, [userId]);
+
+
 const handleAddTask = async (e) => {
     e.preventDefault();
 

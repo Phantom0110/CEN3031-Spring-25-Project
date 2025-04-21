@@ -10,14 +10,33 @@ const milestones = [
   { points: 100, reward: "Exclusive profile banner!" }
 ];
 
+const userId = localStorage.getItem("userId");
+
 const BattlepassPage = ({ onRewardUnlock }) => {
-  const [userPoints, setUserPoints] = useState(45); // For testing, change to dynamic later
+  const [userPoints, setUserPoints] = useState(0); // For testing, change to dynamic later
   const [activatedRewards, setActivatedRewards] = useState(() => {
     const storedState = localStorage.getItem('activatedRewards');
     return storedState ? JSON.parse(storedState) : {};
   });
 
   const { setSidebarImage } = useOutletContext(); // Get the function from DashboardLayout
+
+    useEffect(() => {
+        const fetchUserPoints = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/users/${userId}/points`);
+                const data = await response.json();
+                setUserPoints(data.points);
+            } catch (error) {
+                console.error('Failed to fetch user points:', error);
+            }
+        };
+
+        if (userId) {
+            fetchUserPoints();
+        }
+    }, []);
+
 
   // Save activated rewards to localStorage whenever the state changes
   useEffect(() => {
