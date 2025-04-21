@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -10,18 +11,110 @@ const HomePage = () => {
         dueDate: '',
     });
 
-    const handleAddTask = (e) => {
-        e.preventDefault();
-        const taskWithId = { ...newTask, id: Date.now(), completed: false };
+    const userId = localStorage.getItem("userId"); // Get the user ID from localStorage
+
+const handleAddTask = async (e) => {
+    e.preventDefault();
+
+    try {
+        // 1. Map difficulty to XP (can be anything you decide)
+        const xpMap = {
+            Easy: 10,
+            Medium: 20,
+            Hard: 30,
+        };
+
+const difficultyFromXP = Object.entries(xpMap).reduce((acc, [key, value]) => {
+  acc[value] = key;
+  return acc;
+}, {});
+
+const extractDueDate = (description) => {
+  const match = description.match(/Due (\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+};
+
+        const challengePayload = {
+            name: newTask.name,
+            description: `Due ${newTask.dueDate}`, // You can customize this
+            experience_points: xpMap[newTask.difficulty] || 10,
+        };
+
+        // 2. Create the challenge
+        const challengeRes = await fetch('http://localhost:3000/challenges', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(challengePayload),
+        });
+
+        const createdChallenge = await challengeRes.json();
+
+        // 3. Assign challenge to user
+        const assignRes = await fetch('http://localhost:3000/assign-challenge', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                challenge_id: createdChallenge.id,
+            }),
+        });
+
+        if (!assignRes.ok) {
+            throw new Error('Failed to assign challenge');
+        }
+
+        // 4. Update UI
+        const taskWithId = {
+            ...newTask,
+            id: createdChallenge.id,
+            completed: false,
+        };
         setTasks([...tasks, taskWithId]);
         setNewTask({ name: '', difficulty: 'Easy', dueDate: '' });
-    };
+
+    } catch (error) {
+        console.error('Error adding task:', error);
+        alert('There was a problem adding the task.');
+    }
+};
+
     
-    const handleCompleteTask = (taskId) => {
-        const taskToComplete = tasks.find(task => task.id === taskId);
+    const handleCompleteTask = async (taskId) => {
+    const taskToComplete = tasks.find(task => task.id === taskId);
+
+    try {
+        const response = await fetch('http://localhost:3000/complete-challenge', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                challenge_id: taskToComplete.id,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to complete challenge');
+        }
+
+        console.log('✅ Challenge completed! You earned:', data.earned);
+
+        // Update frontend state
         setCompletedTasks([taskToComplete, ...completedTasks]);
         setTasks(tasks.filter(task => task.id !== taskId));
-    };
+
+    } catch (err) {
+        console.error('Error completing task:', err);
+        alert('Failed to complete task.');
+    }
+};
 
     
     return (

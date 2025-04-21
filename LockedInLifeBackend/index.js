@@ -110,6 +110,30 @@ app.get('/users', async (req, res) => {
   }
 });
 
+// GET: Get all challenges assigned to a specific user
+app.get('/user/:id/challenges', async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const result = await pool.query(`
+      SELECT 
+        uc.completed,
+        uc.challenge_id,
+        c.name,
+        c.description,
+        c.experience_points
+      FROM user_challenges uc
+      JOIN challenges c ON uc.challenge_id = c.id
+      WHERE uc.user_id = $1
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching user challenges' });
+  }
+});
+
 // POST: Add a new user
 app.post('/users', async (req, res) => {
   const { username, email, password } = req.body;
@@ -138,7 +162,7 @@ app.post('/login', async (req, res) => {
 
         if (result.rows.length > 0) {
             // User found, send success response
-            res.status(200).json({ message: 'Login successful' });
+            res.status(200).json({ message: 'Login successful', userId: result.rows[0].id });
         } else {
             // No user found with those credentials
             res.status(401).json({ message: 'Invalid credentials' });

@@ -25,7 +25,8 @@ const LoginPage = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // If credentials are correct, navigate to home page
+                // If credentials are correct...
+		localStorage.setItem("userId", data.userId); // Store the user ID in localStorage
                 navigate("/home");
             } else {
                 // If credentials are incorrect
