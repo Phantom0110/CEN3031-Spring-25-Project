@@ -40,9 +40,20 @@
 
   .sidebar-image {
     width: 200px;
-    margin-top: 20px;
+    height: 300px;
+    margin-top: 10px;
     /* padding: 10px; */
     border-radius: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.635);
+  }
+
+  .bottom-sidebar-image {
+    width: 200px;
+    height: 100px;
+    /* margin-top: 10px; */
+    /* padding: 10px; */
+    border-radius: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.635);
   }
   
   .content {
@@ -71,4 +82,8 @@
 
   input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(50%);
+  }
+
+  .custom-cursor {
+    cursor: url('https://i.pinimg.com/736x/f3/ab/c3/f3abc3433e0cd676ad54a515ca57fb78.jpg'), auto;
   }

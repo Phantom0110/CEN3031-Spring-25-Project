@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import '../styles/BattlepassPage.css'; // Import the CSS file
+import '../styles/BattlepassPage.css';
 
 const milestones = [
-  { points: 20, reward: "New sidebar image!" },
-  { points: 40, reward: "Change background!" },
-  { points: 60, reward: "Unlock mascot!" },
-  { points: 80, reward: "Special avatar item!" },
-  { points: 100, reward: "Exclusive profile banner!" }
+  { points: 20, reward: "Mountain theme!" },
+  { points: 40, reward: "Blue background!" },
+  { points: 60, reward: "Beach theme!" },
+  { points: 80, reward: "Red background!" },
+  { points: 100, reward: "Unlock mascot!" }
 ];
 
 const userId = localStorage.getItem("userId");
@@ -19,7 +19,7 @@ const BattlepassPage = ({ onRewardUnlock }) => {
     return storedState ? JSON.parse(storedState) : {};
   });
 
-  const { setSidebarImage } = useOutletContext(); // Get the function from DashboardLayout
+  const { setSidebarImage, setBottomSidebarImage, mascotImage, setMascotImage } = useOutletContext();
 
     useEffect(() => {
         const fetchUserPoints = async () => {
@@ -53,17 +53,41 @@ const BattlepassPage = ({ onRewardUnlock }) => {
     // Apply reward actions (example: change background color)
     if (updatedRewards[points]) {
       if (points === 20) {
-        setSidebarImage('src/assets/capy.jpg'); // Change sidebar image
+        setSidebarImage('src/assets/Themes/2_PurpleMtns/main.png'); // Change sidebar image
+        setBottomSidebarImage('src/assets/Themes/2_PurpleMtns/pic2.png'); // Change bottom sidebar image
       }  
       if (points === 40) {
-        document.body.style.backgroundImage = 'linear-gradient(rgb(60, 71, 162),rgb(186, 183, 248))';
+        document.body.style.backgroundImage = 'linear-gradient(rgb(47, 56, 136),rgb(198, 195, 248))';
       }
+      if (points === 60) {
+        setSidebarImage('src/assets/Themes/3_Beach/main.jpg'); // Change sidebar image
+        setBottomSidebarImage('src/assets/Themes/3_Beach/pic2.png'); // Change bottom sidebar image
+      }
+      if (points === 80) {
+        document.body.style.backgroundImage = 'linear-gradient(rgb(136, 47, 47),rgb(248, 195, 195))';
+      }
+      if (points === 100) {
+        setMascotImage('src/assets/lilguy.gif');
+      }    
     } else {
       if (points === 20) {
-        setSidebarImage('src/assets/react.svg');
+        // Reset sidebar image to default
+        setSidebarImage('src/assets/Themes/1_Default/main.png'); // Change sidebar image
+        setBottomSidebarImage('src/assets/Themes/1_Default/pic1.jpg'); // Change bottom sidebar image
       }
       if (points === 40) {
         document.body.style.backgroundImage = '';
+      }
+      if (points === 60) {
+        // Reset sidebar image to default
+        setSidebarImage('src/assets/Themes/1_Default/main.png'); // Change sidebar image
+        setBottomSidebarImage('src/assets/Themes/1_Default/pic1.jpg'); // Change bottom sidebar image
+      }
+      if (points === 80) {
+        document.body.style.backgroundImage = '';
+      }
+      if (points === 100) {
+        setMascotImage(null); // Reset mascot image
       }
     }
   };
@@ -138,6 +162,7 @@ const BattlepassPage = ({ onRewardUnlock }) => {
       </div>
 
       <p>{userPoints} / 100 points</p>
+      <img src={mascotImage} alt="Mascot" style={{ display: mascotImage ? 'block' : 'none', width: '300px', margin: '0 auto'}} />
     </div>
   );
 };

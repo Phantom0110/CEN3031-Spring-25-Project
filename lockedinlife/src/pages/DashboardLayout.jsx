@@ -5,7 +5,9 @@ import '../styles/DashboardLayout.css';
 export default function DashboardLayout() {
   const navigate = useNavigate();
 
-  const [sidebarImage, setSidebarImage] = useState('src/assets/react.svg');
+  const [sidebarImage, setSidebarImage] = useState('src/assets/Themes/1_Default/main.png');
+  const [bottomSidebarImage, setBottomSidebarImage] = useState('src/assets/Themes/1_Default/pic1.jpg');
+  const [mascotImage, setMascotImage] = useState(null);
 
   const handleLogout = () => {
     // Clear session if needed
@@ -25,10 +27,11 @@ export default function DashboardLayout() {
 
         <button className="logout-button" onClick={handleLogout}>Logout</button>
 
+        <img src={bottomSidebarImage} alt="Bottom Reward Icon" className="bottom-sidebar-image"/>
       </div>
 
       <div className="content">
-        <Outlet context={{ setSidebarImage }} />
+        <Outlet context={{ setSidebarImage, setBottomSidebarImage, mascotImage, setMascotImage }} />
       </div>
     </div>
   );

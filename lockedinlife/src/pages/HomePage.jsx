@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 
 const HomePage = () => {
     const [tasks, setTasks] = useState([]);
@@ -12,6 +13,7 @@ const HomePage = () => {
     });
 
     const userId = localStorage.getItem("userId"); // Get the user ID from localStorage
+    const { mascotImage } = useOutletContext();
 
     useEffect(() => {
         const fetchUserTasks = async () => {
@@ -167,66 +169,71 @@ const extractDueDate = (description) => {
 
     
     return (
-        <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
-          
-            {/* To-Do Tasks Box */}
-            <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)'}}>
-                <h2>To-Do Tasks</h2>
-                {tasks.length === 0 ? <p>No tasks yet!</p> : (
-                <ul>
-                    {tasks.map(task => (
-                    <li key={task.id}>
-                        <strong>{task.name}</strong> ({task.difficulty}) - Due {task.dueDate}
-                        <button onClick={() => handleCompleteTask(task.id)} style={{ marginLeft: '1rem' }}>
-                        ✅ Complete
-                        </button>
-                    </li>
-                    ))}
-                </ul>
-            )}
-            <hr />
+        <div style={{display: 'block'}}>
+            <div style={{ display: 'flex', gap: '2rem', padding: '2rem' }}>
             
-            {/* Add Task Form */}
-            <h3>Add Task</h3>
-            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <input
-                    type="text"
-                    placeholder="Task name"
-                    value={newTask.name}
-                    onChange={e => setNewTask({ ...newTask, name: e.target.value })}
-                    required
-                />
-                <select value={newTask.difficulty} onChange={e => setNewTask({ ...newTask, difficulty: e.target.value })}>
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                </select>
-                <input
-                    type="date"
-                    value={newTask.dueDate}
-                    onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
-                    required
-                />
-                <button type="submit">➕ Add Task</button>
-            </form>
+                {/* To-Do Tasks Box */}
+                <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)'}}>
+                    <h2>To-Do Tasks</h2>
+                    {tasks.length === 0 ? <p>No tasks yet!</p> : (
+                    <ul>
+                        {tasks.map(task => (
+                        <li key={task.id}>
+                            <strong>{task.name}</strong> ({task.difficulty}) - Due {task.dueDate}
+                            <button onClick={() => handleCompleteTask(task.id)} style={{ marginLeft: '1rem' }}>
+                            ✅ Complete
+                            </button>
+                        </li>
+                        ))}
+                    </ul>
+                )}
+                <hr />
+                
+                {/* Add Task Form */}
+                <h3>Add Task</h3>
+                <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <input
+                        type="text"
+                        placeholder="Task name"
+                        value={newTask.name}
+                        onChange={e => setNewTask({ ...newTask, name: e.target.value })}
+                        required
+                    />
+                    <select value={newTask.difficulty} onChange={e => setNewTask({ ...newTask, difficulty: e.target.value })}>
+                        <option>Easy</option>
+                        <option>Medium</option>
+                        <option>Hard</option>
+                    </select>
+                    <input
+                        type="date"
+                        value={newTask.dueDate}
+                        onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
+                        required
+                    />
+                    <button type="submit">➕ Add Task</button>
+                </form>
+            </div>
+        
+            {/* Completed Tasks Box */}
+            <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)' }}>
+                <h2>Recently Completed</h2>
+                {completedTasks.length === 0 ? (
+                    <p>No completed tasks yet.</p>
+                ) : (
+                    <ul>
+                    {completedTasks.map(task => (
+                        <li key={task.id}>
+                        ✅ <strong>{task.name}</strong> ({task.difficulty}) - Due {task.dueDate}
+                        </li>
+                    ))}
+                    </ul>
+                )}
+            </div>
         </div>
-    
-        {/* Completed Tasks Box */}
-        <div style={{ flex: 1, border: '3px solid rgba(255, 255, 255, 0.635)', padding: '1rem', borderRadius: '8px' , backgroundColor: 'rgba(224, 211, 233, 0.39)' }}>
-            <h2>Recently Completed</h2>
-            {completedTasks.length === 0 ? (
-                <p>No completed tasks yet.</p>
-            ) : (
-                <ul>
-                {completedTasks.map(task => (
-                    <li key={task.id}>
-                    ✅ <strong>{task.name}</strong> ({task.difficulty}) - Due {task.dueDate}
-                    </li>
-                ))}
-                </ul>
-            )}
+
+        <div>
+        <img src={mascotImage} alt="Mascot" style={{ display: 'block', display: mascotImage ? 'block' : 'none', width: '300px', margin: '0 auto'}} />
         </div>
-    
     </div>
     );
 };
